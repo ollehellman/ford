@@ -265,7 +265,8 @@ def main(proj_data,proj_docs,md):
     project = ford.fortran_project.Project(proj_data)
     if len(project.files) < 1:
         print("Error: No source files with appropriate extension found in specified directory.")
-        sys.exit(1)        
+        sys.exit(1)
+    print("OLLE IN MAIN? Before everything")
     # Convert the documentation from Markdown to HTML. Make sure to properly
     # handle LateX and metadata.
     if proj_data['relative']:
@@ -285,6 +286,9 @@ def main(proj_data,proj_docs,md):
     if 'author_description' in proj_data:
         proj_data['author_description'] = md.convert(proj_data['author_description'])
         proj_data['author_description'] = ford.utils.sub_links(ford.utils.sub_macros(ford.utils.sub_notes(proj_data['author_description']),proj_data['project_url']),project)
+#    if 'secret' in proj_data:
+#        proj_data['secret'] = md.convert(proj_data['secret'])
+#        proj_data['secret'] = ford.utils.sub_links(ford.utils.sub_macros(ford.utils.sub_notes(proj_data['summary']),proj_data['project_url']),project)
     proj_docs_ = ford.utils.sub_links(ford.utils.sub_macros(ford.utils.sub_notes(proj_docs),proj_data['project_url']),project)
     # Process any pages
     if 'page_dir' in proj_data:

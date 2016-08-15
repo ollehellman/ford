@@ -13,16 +13,16 @@
   </div>
   
   <div class="row">
-    <div class="col-lg-3">
+    <div class="col-sm-2">
     {{ macros.sidebar(project,module) }}
     </div>
     
-    <div class="col-lg-9" id='text'>
+    <div class="col-sm-offset-1 col-sm-8 col-sm-offset-1" id='text'>
+    {{ module.doc }}
     {% if module.obj == 'submodule' %}{{ macros.ancestry(module) }}{% endif %}
     {{ macros.use_list(module) }}
     {{ module.usesgraph }}
     {% if module.descendants|length > 0 %}{{ macros.descendants(module) }}{% endif %}
-    {{ module.doc }}
     {% if module.doc and not module.usedbygraph %}<br>{% endif %}
     {% if module.usedbygraph %}
     <h3>Used By</h3>

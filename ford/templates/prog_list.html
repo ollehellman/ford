@@ -1,12 +1,52 @@
-{% extends "base.html" %}
+{% extends "base_program.html" %}
 {% block title %}
 All Programs &ndash; {{ project }}
 {% endblock %}
 {% block body %}
+</div>
+
+<div class="jumbotron">
+<div class="container-fluid">
+    <h3>Programs</h3>
+</div>
+</div>
+
+<div class="row">
+{% for prog in project.programs|sort(attribute='name') %}
+    <div class="col-sm-offset-1 col-sm-4" id='text'>
+        <!-- fit the description of a program here -->
+        <!-- First the title -->
+        <center>
+        {% if prog.meta['propnamelink'] %}
+            <h3>{{ prog.meta['propnamelink'] }}</h3>
+        {% else %}
+            <h3>{{ prog }}</h3>
+        {% endif %}
+        </center>
+        <!-- then some additional little picture or something -->
+        {% if prog.meta['secret'] %}
+            {{ prog.meta['secret'] }}
+        {% endif %}
+        <p>
+        <!-- and the summary -->
+        {{ prog.meta['summary'] }}
+        </p>
+    </div>
+{% endfor %}
+</div>
+
+<!--
+<div class="container-fluid">
       <div class="row">
-        <div class="col-lg-12" id='text'>
-			 <h1>Programs</h1>
-			 <table class="table table-striped nostretch">
+        <div class="col-sm-offset-1 col-sm-10 col-sm-offset-1" id='text'>
+			 <table class="table table-striped">
+                 <thead><tr><th>Program</th><th>Description</th></tr></thead>
+                 <tbody>
+                 {% for prog in project.programs|sort(attribute='name') %}
+                   <tr><td>{{ prog }}</td><td>{{ prog.meta['summary'] }}</td></tr>
+                 {% endfor %}
+                 </tbody>
+            </table>
 			 <thead><tr><th>Program</th><th>Source File</th><th>Description</th></tr></thead>
 			 <tbody>
 			 {% for prog in project.programs|sort(attribute='name') %}
@@ -15,4 +55,6 @@ All Programs &ndash; {{ project }}
 			 </tbody></table>
         </div>
       </div>
+-->
+
 {% endblock %}

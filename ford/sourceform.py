@@ -252,7 +252,7 @@ class FortranBase(object):
         if len(self.doc) > 0:
             if len(self.doc) == 1 and ':' in self.doc[0]:
                 words = self.doc[0].split(':')[0].strip()
-                if words.lower() not in ['author','date','license','version','category','summary','deprecated','display','graph']:
+                if words.lower() not in ['author','date','license','version','category','summary','deprecated','display','graph','secret']:
                     self.doc.insert(0,'')
                 self.doc.append('')
             self.doc = '\n'.join(self.doc)

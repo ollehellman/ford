@@ -47,7 +47,7 @@ def sub_notes(docs):
         docs = WARNING_RE.sub("</p><div class=\"alert alert-warning\" role=\"alert\"><h4>Warning</h4>\g<1></div>",docs)
     
     while TODO_RE.search(docs):
-        docs = TODO_RE.sub("</p><div class=\"alert alert-success\" role=\"alert\"><h4>ToDo</h4>\g<1></div>",docs)
+        docs = TODO_RE.sub("</p><div class=\"alert alert-success\" role=\"alert\"><h4>Todo</h4>\g<1></div>",docs)
     
     while BUG_RE.search(docs):
         docs = BUG_RE.sub("</p><div class=\"alert alert-danger\" role=\"alert\"><h4>Bug</h4>\g<1></div>",docs)

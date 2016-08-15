@@ -1,27 +1,42 @@
-{% extends "base.html" %}
-{% block title %}{{ program.name }} &ndash; {{ project }}{% endblock title %}
-{% block body %}
-  {% import 'macros.html' as macros %}
-  <div class="row">
-    <h1>{{ program.name }} 
-    <small>Program</small>
-    {% if program.meta['deprecated'] and program.meta['deprecated'].lower() == 'true' %}
-	 <span class="label label-danger depwarn">Deprecated</span>
+{% extends "base_program.html" %}
+{% block title %}
+    {% if program.meta['propname'] %}
+        {{ program.meta['propname'] }} &ndash; {{ project }}
+    {% else %}
+        {{ program.name }} &ndash; {{ project }}
     {% endif %}
-    </h1>
-	 {{ macros.info_bar(program.name,program.meta,project_url,program.hierarchy) }}    
-  </div>
-  
+{% endblock title %}
+{% block body %}
+{% import 'macros.html' as macros %}
+
+</div>
+
+<div class="jumbotron">
+<div class="container-fluid">
+    {% if program.meta['propname'] %}
+        <h3>{{ program.meta['propname'] }}</h3>
+    {% else %}
+        <h3>{{ program.name }}</h3>
+    {% endif %}
+</div>
+</div>
+
+<div class="container-fluid">
   <div class="row">
-    <div class="col-lg-3">
+    <!--
+    <div class="col-sm-2">
     {{ macros.sidebar(project,program) }}
     </div>
+    -->
     
-    <div class="col-lg-9" id='text'>
+    <div class="col-sm-offset-2 col-sm-7 col-sm-offset-3" id='text'>
+    {{ program.doc }}
+
+<!--
+    <br>
     {{ macros.use_list(program) }}
     {{ program.usesgraph }}
     {% if program.usesgraph %}<br><br>{% endif %}
-    {{ program.doc }}
     {% if program.callsgraph %}
      <h3>Calls</h3>
      {{ program.callsgraph }}
@@ -102,7 +117,7 @@
     {{ program.src }}
     </section>
     {% endif %}
-    
+-->    
     </div>
   </div>
 {% endblock body %}

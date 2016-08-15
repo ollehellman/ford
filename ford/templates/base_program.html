@@ -63,11 +63,20 @@
             <li>{{ pages }}</li>
             {% endif %}
             <!-- programs -->
-            {% if project.programs|length > 1 %}
-            <li><a href="{{ project_url }}/lists/programs.html">Programs</a></li>
-            {% elif project.programs|length == 1 %}
-            <li><a href="{{ project.programs[0].get_url() }}">Program</a></li>
-            {% endif %}
+            <li>
+            <a class="dropdown-toggle" data-toggle="dropdown" href="programs.html" id="programdropdown">Programs<span class="caret"></span></a>
+            <ul class="dropdown-menu" aria-labelledby="apidropdown">
+                {% for prog in project.programs|sort(attribute='name') %}
+                    <li>
+                        {% if prog.meta['propnamelink'] %}
+                            {{ prog.meta['propnamelink'] }}
+                        {% else %}
+                            {{ prog }}
+                        {% endif %}
+                     </li>
+                {% endfor %}
+            </ul>
+            </li>
             <!-- API -->
             <li>
             <a class="dropdown-toggle" data-toggle="dropdown" href="#" id="apidropdown">API<span class="caret"></span></a>
