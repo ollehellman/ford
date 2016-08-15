@@ -28,11 +28,15 @@
 import re
 import os.path
 
-NOTE_RE = re.compile("@note\s*(.*?)\s*</p>",re.IGNORECASE|re.DOTALL)
-WARNING_RE = re.compile("@warning\s*(.*?)\s*</p>",re.IGNORECASE|re.DOTALL)
-TODO_RE = re.compile("@todo\s*(.*?)\s*</p>",re.IGNORECASE|re.DOTALL)
-BUG_RE = re.compile("@bug\s*(.*?)\s*</p>",re.IGNORECASE|re.DOTALL)
-LINK_RE = re.compile("\[\[(\w+)(?:\((\w+)\))?(?::(\w+)(?:\((\w+)\))?)?\]\]")
+NOTE_TYPE = {'note':'info',
+             'warning':'warning',
+             'todo':'success',
+             'bug':'danger'}
+NOTE_RE = [re.compile(r"@({})\s*(((?!@({})).)*?)@end\1\s*(</p>)?".format(note,
+           '|'.join(NOTE_TYPE.keys())), re.IGNORECASE|re.DOTALL) for note in NOTE_TYPE] \
+        + [re.compile(r"@({})\s*(.*?)\s*</p>".format(note),
+                      re.IGNORECASE|re.DOTALL) for note in NOTE_TYPE]
+LINK_RE = re.compile(r"\[\[(\w+(?:\.\w+)?)(?:\((\w+)\))?(?::(\w+)(?:\((\w+)\))?)?\]\]")
 
 
 def sub_notes(docs):
@@ -40,18 +44,14 @@ def sub_notes(docs):
     Substitutes the special controls for notes, warnings, todos, and bugs with
     the corresponding div.
     """
-    while NOTE_RE.search(docs):
-        docs = NOTE_RE.sub("</p><div class=\"alert alert-info\" role=\"alert\"><h4>Note</h4>\g<1></div>",docs)
-        
-    while WARNING_RE.search(docs):
-        docs = WARNING_RE.sub("</p><div class=\"alert alert-warning\" role=\"alert\"><h4>Warning</h4>\g<1></div>",docs)
-    
-    while TODO_RE.search(docs):
-        docs = TODO_RE.sub("</p><div class=\"alert alert-success\" role=\"alert\"><h4>Todo</h4>\g<1></div>",docs)
-    
-    while BUG_RE.search(docs):
-        docs = BUG_RE.sub("</p><div class=\"alert alert-danger\" role=\"alert\"><h4>Bug</h4>\g<1></div>",docs)
-
+    def substitute(match):
+        ret = "</p><div class=\"alert alert-{}\" role=\"alert\"><h4>{}</h4>" \
+              "<p>{}</p></div>".format(NOTE_TYPE[match.group(1).lower()],
+                                       match.group(1).capitalize(), match.group(2))
+        if len(match.groups()) >= 4 and not match.group(4): ret += '\n<p>'
+        return ret
+    for regex in NOTE_RE:
+        docs = regex.sub(substitute,docs)
     return docs
 
 
@@ -146,7 +146,10 @@ def split_path(path):
     a list.
     '''
     def recurse_path(path,retlist):
-        if len(retlist) > 10: exit(0)
+        if len(retlist) > 100:
+            fullpath = os.path.join(*([ path, ] + retlist))
+            print("Directory '{}' contains too many levels".format(fullpath))
+            exit(1)
         head, tail = os.path.split(path)
         if len(tail) > 0:
             retlist.insert(0,tail)
@@ -181,7 +184,8 @@ def sub_links(string,project):
                       'file': 'allfiles',
                       'interface': 'absinterfaces',
                       'absinterface': 'absinterfaces',
-                      'program': 'programs' }
+                      'program': 'programs',
+                      'block': 'blockdata' }
         
     SUBLINK_TYPES = { 'variable': 'variables',
                       'type': 'types',
@@ -192,7 +196,8 @@ def sub_links(string,project):
                       'function': 'functions',
                       'final': 'finalprocs',
                       'bound': 'boundprocs',
-                      'modproc': 'modprocs' }
+                      'modproc': 'modprocs',
+                      'common': 'common' }
         
     
     def convert_link(match):

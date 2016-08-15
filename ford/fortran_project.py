@@ -49,15 +49,11 @@ class Project(object):
     def __init__(self, settings):
         self.settings = settings        
         self.name = settings['project']
-        self.topdirs = settings['project_dir']
+        self.topdirs = settings['src_dir']
         self.extensions = settings['extensions']
+        self.fixed_extensions = settings['fixed_extensions']
         self.extra_filetypes = settings['extra_filetypes']
         self.display = settings['display']
-
-        fpp_ext = []
-        if settings['preprocess'].lower() == 'true':
-            for ext in self.extensions:
-                if ext == ext.upper() and ext != ext.lower(): fpp_ext.append(ext)        
         
         self.files = []
         self.modules = []
@@ -68,6 +64,8 @@ class Project(object):
         self.submodules = []
         self.submodprocedures = []
         self.extra_files = []
+        self.blockdata = []
+        self.common = {}
                 
         # Get all files within topdir, recursively
         srctree = []
@@ -83,15 +81,21 @@ class Project(object):
                 if excluded: continue
                 curdir = srcdir[0]
                 for item in srcdir[2]:
-                    if item.split('.')[-1] in self.extensions and not item in settings['exclude']:
+                    ext = item.split('.')[-1]
+                    if (ext in self.extensions or ext in self.fixed_extensions) and \
+                      not item in settings['exclude']:
                         # Get contents of the file
                         print("Reading file {}".format(os.path.relpath(os.path.join(curdir,item))))
-                        fpp = item.split('.')[-1] in fpp_ext
+                        if item.split('.')[-1] in settings['fpp_extensions']:
+                            preprocessor = settings['preprocessor']
+                        else:
+                            preprocessor = None
                         if settings['dbg']:
-                            self.files.append(ford.sourceform.FortranSourceFile(os.path.join(curdir,item),settings,fpp))
+                            self.files.append(
+                                ford.sourceform.FortranSourceFile(os.path.join(curdir,item),settings, preprocessor, ext in self.fixed_extensions))
                         else:
                             try:
-                                self.files.append(ford.sourceform.FortranSourceFile(os.path.join(curdir,item),settings,fpp))
+                                self.files.append(ford.sourceform.FortranSourceFile(os.path.join(curdir,item),settings,preprocessor, ext in self.fixed_extensions))
                             except Exception as e:
                                 print("Warning: Error parsing {}.\n\t{}".format(os.path.relpath(os.path.join(curdir,item)),e.args[0]))
                                 continue
@@ -108,6 +112,8 @@ class Project(object):
                         for program in self.files[-1].programs:
                             program.visible = True
                             self.programs.append(program)
+                        for block in self.files[-1].blockdata:
+                            self.blockdata.append(block)
                     elif item.split('.')[-1] in self.extra_filetypes and not item in settings['exclude']:
                         print("Reading file {}".format(os.path.relpath(os.path.join(curdir,item))))
                         if settings['dbg']:
@@ -142,7 +148,7 @@ class Project(object):
             non_local_mods[name.lower()] = '<a href="{}">{}</a>'.format(url,name)
         
         # Match USE statements up with the right modules
-        containers = self.modules + self.procedures + self.programs + self.submodules
+        containers = self.modules + self.procedures + self.programs + self.submodules + self.blockdata
         for container in containers:
             id_mods(container,self.modules,non_local_mods,self.submodules)
             
@@ -150,10 +156,10 @@ class Project(object):
         deplist = {}
         
         def get_deps(item):
-            uselist = [m[0] for m in mod.uses]
-            for proc in item.subroutines:
+            uselist = [m[0] for m in item.uses]
+            for proc in getattr(item,'subroutines',[]):
                 uselist.extend(get_deps(proc))
-            for proc in item.functions:
+            for proc in getattr(item,'functions',[]):
                 uselist.extend(get_deps(proc))
             for proc in getattr(item,'modprocedures',[]):
                 uselist.extend(get_deps(proc))
@@ -163,6 +169,7 @@ class Project(object):
             uselist = get_deps(mod)
             uselist = [m for m in uselist if type(m) == ford.sourceform.FortranModule]
             deplist[mod] = set(uselist)
+            mod.deplist = uselist
         for mod in self.submodules:
             if type(mod.ancestor_mod) is ford.sourceform.FortranModule:
                 uselist = get_deps(mod)
@@ -174,13 +181,24 @@ class Project(object):
                         print('Warning: could not identify parent SUBMODULE of SUBMODULE ' + mod.name)
                 else:
                     uselist.insert(0,mod.ancestor_mod)
+                mod.deplist = uselist
                 deplist[mod] = set(uselist)
             elif self.settings['warn'].lower() == 'true':
                 print('Warning: could not identify parent MODULE of SUBMODULE ' + mod.name)
+        # Get dependencies for programs and top-level procedures as well,
+        # if dependency graphs are to be produced
+        if self.settings['graph'].lower() == 'true':
+            for proc in self.procedures:
+                proc.deplist = set([m for m in get_deps(proc) if type(m) == ford.sourceform.FortranModule])
+            for prog in self.programs:
+                prog.deplist = set([m for m in get_deps(prog) if type(m) == ford.sourceform.FortranModule])
+            for block in self.blockdata:
+                block.deplist = set([m for m in get_deps(block) if type(m) == ford.sourceform.FortranModule])
         ranklist = toposort.toposort_flatten(deplist)
         for proc in self.procedures:
             if proc.parobj == 'sourcefile': ranklist.append(proc)
         ranklist.extend(self.programs)
+        ranklist.extend(self.blockdata)
         
         # Perform remaining correlations for the project
         for container in ranklist:
@@ -235,6 +253,19 @@ class Project(object):
                     self.absinterfaces.append(absint)
                 for dtype in program.types:
                     self.types.append(dtype)
+                    
+            for block in sfile.blockdata:
+                for dtype in block.types:
+                    self.types.append(dtype)
+        
+        self.mod_lines = sum([m.num_lines for m in self.modules + self.submodules])
+        self.proc_lines = sum([p.num_lines for p in self.procedures])
+        self.file_lines = sum([p.num_lines for p in self.programs])
+        self.type_lines = sum([t.num_lines for t in self.types])
+        self.type_lines_all = sum([t.num_lines_all for t in self.types])
+        self.absint_lines = sum([a.num_lines for a in self.absinterfaces])
+        self.prog_lines = sum([a.num_lines for a in self.programs])
+        self.block_lines = sum([b.num_lines for b in self.blockdata])
         print()
 
     def markdown(self,md,base_url='..'):
@@ -266,13 +297,14 @@ def id_mods(obj,modlist,intrinsic_mods={},submodlist=[]):
     Match USE statements up with the right modules
     """
     for i in range(len(obj.uses)):
-        if obj.uses[i][0].lower() in intrinsic_mods:
-            obj.uses[i] = [intrinsic_mods[obj.uses[i][0].lower()], obj.uses[i][1]]
-            continue
         for candidate in modlist:
             if obj.uses[i][0].lower() == candidate.name.lower():
                 obj.uses[i] = [candidate, obj.uses[i][1]]
                 break
+        else:
+            if obj.uses[i][0].lower() in intrinsic_mods:
+                obj.uses[i] = [intrinsic_mods[obj.uses[i][0].lower()], obj.uses[i][1]]
+                continue
     if getattr(obj,'ancestor',None):
         for submod in submodlist:
             if obj.ancestor == submod.name.lower():
@@ -285,8 +317,8 @@ def id_mods(obj,modlist,intrinsic_mods={},submodlist=[]):
                 break
     for modproc in getattr(obj,'modprocedures',[]):
         id_mods(modproc,modlist,intrinsic_mods)
-    for func in obj.functions:
+    for func in getattr(obj,'functions',[]):
         id_mods(func,modlist,intrinsic_mods)
-    for subroutine in obj.subroutines:
+    for subroutine in getattr(obj,'subroutines',[]):
         id_mods(subroutine,modlist,intrinsic_mods)
     return
