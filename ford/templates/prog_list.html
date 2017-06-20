@@ -35,26 +35,4 @@ All Programs &ndash; {{ project }}
 {% endfor %}
 </div>
 
-<!--
-<div class="container-fluid">
-      <div class="row">
-        <div class="col-sm-offset-1 col-sm-10 col-sm-offset-1" id='text'>
-			 <table class="table table-striped">
-                 <thead><tr><th>Program</th><th>Description</th></tr></thead>
-                 <tbody>
-                 {% for prog in project.programs|sort(attribute='name') %}
-                   <tr><td>{{ prog }}</td><td>{{ prog.meta['summary'] }}</td></tr>
-                 {% endfor %}
-                 </tbody>
-            </table>
-			 <thead><tr><th>Program</th><th>Source File</th><th>Description</th></tr></thead>
-			 <tbody>
-			 {% for prog in project.programs|sort(attribute='name') %}
-			   <tr><td>{{ prog }}</td><td>{{ prog.parent }}</td><td>{{ prog.meta['summary'] }}</td></tr>
-			 {% endfor %}
-			 </tbody></table>
-        </div>
-      </div>
--->
-
 {% endblock %}

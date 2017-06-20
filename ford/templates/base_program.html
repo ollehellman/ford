@@ -46,7 +46,7 @@
 
 <!-- Fixed navbar, defined in macros.html for some reason -->
 <nav class="navbar navbar-inverse navbar-static-top">
-    <div class="container">
+    <div class="container-fluid">
         <div class="navbar-header">
             <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar" aria-expanded="false" aria-controls="navbar">
                 <span class="sr-only">Toggle navigation</span>
@@ -54,6 +54,7 @@
                 <span class="icon-bar"></span>
                 <span class="icon-bar"></span>
             </button>
+<div class="navbar-brand"><img style="height:50px; position: relative; left: 0px; top: -10px" src="{{ project_url }}/media/matematico.png"></div>
             <a class="navbar-brand" href="{{ project_url }}/index.html">{{ project }} {% if version %}<small>{{ version }}</small>{% endif %}</a>
         </div>
         <div id="navbar" class="collapse navbar-collapse">

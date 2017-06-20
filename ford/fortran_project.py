@@ -23,7 +23,6 @@
 #  
 #  
 
-
 from __future__ import print_function
 
 import os
@@ -124,8 +123,7 @@ class Project(object):
                             except Exception as e:
                                 print("Warning: Error parsing {}.\n\t{}".format(os.path.relpath(os.path.join(curdir,item)),e.args[0]))
                                 continue
-        self.allfiles = self.files + self.extra_files                
-
+        self.allfiles = self.files + self.extra_files
 
     def __str__(self):
         return self.name

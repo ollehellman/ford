@@ -1,0 +1,25 @@
+{% extends "base.html" %}
+{% block title %}
+Todolist &ndash; {{ project }}
+{% endblock %}
+{% block body %}
+</div>
+<div class="jumbotron">
+<div class="container-fluid">
+    <h3>Todolist</h3>
+</div>
+</div>
+
+      <div class="row" id='text'>
+        <div class="col-lg-offset-2 col-lg-7" id='text'>
+        <table class="table table-striped">
+        <thead><tr><th>File</th><th>Description</th></tr></thead>
+             <tbody>
+			 {% for note in notelist %}
+                {{note}} 
+             {% endfor %}
+             </tbody>
+        </table>
+        </div>
+      </div>
+{% endblock %}

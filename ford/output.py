@@ -125,6 +125,10 @@ class Documentation(object):
             if pagetree:
                 for item in pagetree:
                     self.pagetree.append(PagetreePage(data,project,item))
+            # Olles note list
+            if len(data['notelist']) > 0:
+                self.lists.append(NoteList(data,project))
+            # End olles note list
         except Exception as e:
             if data['dbg']:
                 traceback.print_exc()
@@ -141,7 +145,7 @@ class Documentation(object):
             for p in self.docs:
                 self.tipue.create_node(p.html,p.loc,p.obj.meta)
             for p in self.pagetree:
-                self.tipue.create_node(p.html,p.loc)
+                self.tipue.create_node(p.html,p.loc)        
             
     def writeout(self):
         out_dir = self.data['output_dir']
@@ -306,6 +310,19 @@ class BlockList(BasePage):
         template = env.get_template('block_list.html')
         return template.render(data,project=proj)
 
+# Olles Notelist
+class NoteList(BasePage):
+    @property
+    def outfile(self):
+        return os.path.join(self.out_dir,'lists','notelist.html')
+    def loc(self):
+        return '/lists/notelist.html'
+
+    def render(self,data,proj,obj):
+        template = env.get_template('note_list.html')
+        data['project_url'] = '..'
+        return template.render(data,project=proj)
+# End Olles notelist
 
 class DocPage(BasePage):
     """

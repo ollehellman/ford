@@ -310,7 +310,6 @@ def main(proj_data,proj_docs,md):
     if len(project.files) < 1:
         print("Error: No source files with appropriate extension found in specified directory.")
         sys.exit(1)
-    print("OLLE IN MAIN? Before everything")
     # Convert the documentation from Markdown to HTML. Make sure to properly
     # handle LateX and metadata.
     if proj_data['relative']:
@@ -330,9 +329,6 @@ def main(proj_data,proj_docs,md):
     if 'author_description' in proj_data:
         proj_data['author_description'] = md.convert(proj_data['author_description'])
         proj_data['author_description'] = ford.utils.sub_links(ford.utils.sub_macros(ford.utils.sub_notes(proj_data['author_description']),proj_data['project_url']),project)
-#    if 'secret' in proj_data:
-#        proj_data['secret'] = md.convert(proj_data['secret'])
-#        proj_data['secret'] = ford.utils.sub_links(ford.utils.sub_macros(ford.utils.sub_notes(proj_data['summary']),proj_data['project_url']),project)
     proj_docs_ = ford.utils.sub_links(ford.utils.sub_macros(ford.utils.sub_notes(proj_docs),proj_data['project_url']),project)
     # Process any pages
     if 'page_dir' in proj_data:
@@ -341,6 +337,21 @@ def main(proj_data,proj_docs,md):
     else:
         page_tree = None
     proj_data['pages'] = page_tree
+
+    # Olle: Ugly hack to make a todolist:
+    notelist = []
+    for item in project.files:
+        # Absolute location
+        rawurl=item.path        
+        # Make sure I iterate over everything here
+        for thing in [item]+item.modules+item.submodules+item.programs+item.subroutines+item.blockdata+item.functions:
+            if thing.doc:
+                note=ford.utils.olle_extract_notes(thing.doc,rawurl,thing)
+                notelist += note
+    # Also go through all the pages and look for todos
+    proj_data['notelist']=notelist
+    # End olles ugly hack
+
     # Produce the documentation using Jinja2. Output it to the desired location
     # and copy any files that are needed (CSS, JS, images, fonts, source files,
     # etc.)

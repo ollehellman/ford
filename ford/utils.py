@@ -27,6 +27,7 @@
 
 import re
 import os.path
+import BeautifulSoup 
 
 NOTE_TYPE = {'note':'info',
              'warning':'warning',
@@ -37,7 +38,6 @@ NOTE_RE = [re.compile(r"@({})\s*(((?!@({})).)*?)@end\1\s*(</p>)?".format(note,
         + [re.compile(r"@({})\s*(.*?)\s*</p>".format(note),
                       re.IGNORECASE|re.DOTALL) for note in NOTE_TYPE]
 LINK_RE = re.compile(r"\[\[(\w+(?:\.\w+)?)(?:\((\w+)\))?(?::(\w+)(?:\((\w+)\))?)?\]\]")
-
 
 def sub_notes(docs):
     """
@@ -54,7 +54,32 @@ def sub_notes(docs):
         docs = regex.sub(substitute,docs)
     return docs
 
-
+# Olle added this, to extract the todo notes
+def olle_extract_notes(docs,hdr,link):
+    """
+    Extracts the todo things from the already prepared HTML. Not the prettiest way to do it, but 
+    not very intrusive. 
+    """
+    notes=[]
+    soup = BeautifulSoup.BeautifulSoup(docs)
+    for note in soup.findAll("div",{"class":"alert alert-success"}):
+        # make a copy
+        nn=note
+        # remove weird stuff
+        if nn.find("a",{"class":"footnote-backref"}):
+            nn.find("a",{"class":"footnote-backref"}).extract()        
+        # remove the ToDo tag thing, replace it with a table column
+        tg=nn.find("h4") #extract()
+        tg.string=hdr.strip()
+        tg.name="td"
+        # change the enclosing <p> to table thingy
+        tg=nn.find("p")
+        tg.name="td"
+        nn.name="tr"
+        nn.attrs=None
+        # and change the div to row
+        notes+=[str(nn)] #note.contents
+    return notes
 
 def get_parens(line,retlevel=0,retblevel=0):
     """

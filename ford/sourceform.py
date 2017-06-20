@@ -317,6 +317,8 @@ class FortranBase(object):
             self.doc = ""
             self.meta = {}
 
+
+
         if self.parent:
             self.display = self.parent.display
 
@@ -341,9 +343,9 @@ class FortranBase(object):
             elif key == 'summary':
                 self.meta[key] = '\n'.join(self.meta[key])
         if hasattr(self,'num_lines'): self.meta['num_lines'] = self.num_lines
-        
+
         self.doc = ford.utils.sub_macros(ford.utils.sub_notes(self.doc),self.base_url)
-    
+
         if 'summary' in self.meta:
             self.meta['summary'] = md.convert(self.meta['summary'])
             self.meta['summary'] = ford.utils.sub_macros(ford.utils.sub_notes(self.meta['summary']),self.base_url)
